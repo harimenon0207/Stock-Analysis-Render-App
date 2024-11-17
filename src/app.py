@@ -230,4 +230,4 @@ def download_stock_data(n_clicks, tickers):
 
 # Run the app locally
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8000)
+    app.run_server(debug=True)
