@@ -21,52 +21,71 @@ tckrs = ','.join(tckrs['Tickers'].unique().astype(str).flatten())
 # Layout of the app
 app.layout = dbc.Container([
     html.H1("Stock Price Analysis & Investment Recommendations"),
-
+    html.Hr(),
+    html.H4("List out all Stock Tickers required for analysis"),    
     dbc.Row([
         dbc.Col([
             dcc.Input(
                 id='stock-input', 
                 type='text', 
                 placeholder='Enter stock tickers separated by comma', 
-                value=tckrs
+                value=tckrs,
+                style={'width':1000}
             ),
-            dbc.Button('Update Stocks', id='update-button', n_clicks=0, color='primary', className='ml-2'),
+        ], width=12)
+    ]),
+    html.Br(),
+    dbc.Row([
+        dbc.Col([
+            dbc.Button('Get latest data', id='update-button', n_clicks=0, color='primary', className='ml-2'),
             html.Br(),
             html.Div(id='latest-update', children='No data fetched yet'),
         ], width=6)
     ]),
 
-    dbc.Row([
-        dbc.Col([
-            dcc.Dropdown(id='ticker-dropdown', multi=False, placeholder='Select a Stock'),
-            dcc.Graph(id='price-chart'),
-        ], width=12)
-    ]),
+    html.Hr(),
+
 
     dbc.Row([
         dbc.Col([
-            html.H4('Underpriced Stocks'),
+            html.H4('Stock prices under forecast(Last 2 days)'),
             dash_table.DataTable(id='underpriced-table', columns=[
                 {'name': 'Ticker', 'id': 'ticker'},
                 {'name': 'Latest Price', 'id': 'latest_price'},
                 {'name': '1 Week Prediction Avg', 'id': 'prediction_avg'},
-                {'name': '% Below Prediction', 'id': 'percent_below'}
-            ]),
+                {'name': '% Below Prediction', 'id': 'percent_below'}],
+                style_as_list_view=True,
+                style_cell={'padding': '5px'},
+                style_header={'backgroundColor': 'white','fontWeight': 'bold'}
+                ),
         ], width=6),
         dbc.Col([
-            html.H4('Overpriced Stocks'),
+            html.H4('Stock prices above forecast(Last 2 days)'),
             dash_table.DataTable(id='overpriced-table', columns=[
                 {'name': 'Ticker', 'id': 'ticker'},
                 {'name': 'Latest Price', 'id': 'latest_price'},
                 {'name': '1 Week Prediction Avg', 'id': 'prediction_avg'},
-                {'name': '% Above Prediction', 'id': 'percent_above'}
-            ]),
+                {'name': '% Above Prediction', 'id': 'percent_above'}],
+                style_as_list_view=True,
+                style_cell={'padding': '5px'},
+                style_header={'backgroundColor': 'white','fontWeight': 'bold'}                
+                ),
         ], width=6)
     ]),
+    html.Hr(),
 
     dbc.Row([
         dbc.Col([
-            html.H4('Historical & Predicted Data'),
+            html.H3('Select a Ticker below for deeper analysis'),
+            dcc.Dropdown(id='ticker-dropdown', multi=False, placeholder='Select a Stock'),
+            dcc.Graph(id='price-chart'),
+        ], width=12)
+    ]),
+    html.Hr(),
+
+    dbc.Row([
+        dbc.Col([
+            html.H3('Historical & Predicted Data (Last 60 days)'),
             dcc.Graph(id='historical-predicted-chart'),
         ], width=12)
     ]),
@@ -121,15 +140,15 @@ def update_stock_data(n_clicks, tickers):
             if last_2_days_avg < avg_prediction * 0.95:
                 underpriced_data.append({
                     'ticker': ticker,
-                    'latest_price': latest_price,
-                    'prediction_avg': avg_prediction,
+                    'latest_price': f'{latest_price:.2f}',
+                    'prediction_avg': f'{avg_prediction:.2f}',
                     'percent_below': f'{(avg_prediction - last_2_days_avg) / avg_prediction * 100:.2f}%'
                 })
             elif last_2_days_avg > avg_prediction * 1.05:
                 overpriced_data.append({
                     'ticker': ticker,
-                    'latest_price': latest_price,
-                    'prediction_avg': avg_prediction,
+                    'latest_price': f'{latest_price:.2f}',
+                    'prediction_avg': f'{avg_prediction:.2f}',
                     'percent_above': f'{(last_2_days_avg - avg_prediction) / avg_prediction * 100:.2f}%'
                 })
 
@@ -197,7 +216,8 @@ def update_historical_predicted_chart(selected_ticker):
 
     # Plot historical data
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=stock_data.index, y=stock_data['Close'], mode='lines', name=f'{selected_ticker} Price'))
+    stock_data_last_60_days = stock_data.tail(60)
+    fig.add_trace(go.Scatter(x=stock_data_last_60_days.index, y=stock_data_last_60_days['Close'], mode='lines', name=f'{selected_ticker} Price'))
 
     # Plot predicted data (last 14 days)
     predicted_last_14_days = forecast[['ds', 'yhat']].tail(14)
