@@ -3,6 +3,6 @@ dash_bootstrap_components==1.6.0
 numpy==1.26.4
 pandas==2.2.3
 prophet==1.1.5
-yfinance==0.2.43
+yfinance==0.2.54
 gunicorn==22.0.0
 dash-tools
