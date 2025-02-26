@@ -116,7 +116,8 @@ def update_stock_data(n_clicks, tickers):
         # Fetch stock data and run Prophet predictions for all tickers
         for ticker in tickers:
             stock_data = yf.download(ticker, period='1y')
-
+            stock_data.columns = stock_data.columns.map('_'.join)
+            stock_data.columns = ['Close','High','Low','Open','Volume']
             # Remove the last 7 days for training
             last_7_days = stock_data.iloc[-7:]
             train_data = stock_data.iloc[:-7]
@@ -133,7 +134,7 @@ def update_stock_data(n_clicks, tickers):
             forecast_tail = forecast[['ds', 'yhat']].iloc[-14:]  # Take the last 14 days of predictions
             last_7_days_forecast = forecast_tail.iloc[:7]  # First 7 are the predictions for missing days
             avg_prediction = last_7_days_forecast['yhat'].mean()
-            latest_price = last_7_days['Close'][-1]
+            latest_price = last_7_days['Close'].iloc[-1]
             last_2_days_avg = last_7_days['Close'][-2:].mean()
 
             # Identify underpriced or overpriced stocks
@@ -173,7 +174,8 @@ def update_chart(selected_ticker, tickers):
     
     tickers = [ticker.strip() for ticker in tickers.split(',')]
     stock_data = yf.download(selected_ticker, period='1y')
-
+    stock_data.columns = stock_data.columns.map('_'.join)
+    stock_data.columns = ['Close','High','Low','Open','Volume']
     # Calculate 7-day and 21-day moving averages
     stock_data['7-day MA'] = stock_data['Close'].rolling(window=7).mean()
     stock_data['21-day MA'] = stock_data['Close'].rolling(window=21).mean()
@@ -199,7 +201,8 @@ def update_historical_predicted_chart(selected_ticker):
         return go.Figure()
     
     stock_data = yf.download(selected_ticker, period='1y')
-
+    stock_data.columns = stock_data.columns.map('_'.join)
+    stock_data.columns = ['Close','High','Low','Open','Volume']
     # Remove the last 7 days for training
     last_7_days = stock_data.iloc[-7:]
     train_data = stock_data.iloc[:-7]
@@ -240,6 +243,8 @@ def download_stock_data(n_clicks, tickers):
         data = []
         for ticker in tickers:
             stock_data = yf.download(ticker, period='1y')
+            stock_data.columns = stock_data.columns.map('_'.join)
+            stock_data.columns = ['Close','High','Low','Open','Volume']
             stock_data.reset_index(inplace=True)
             stock_data['Ticker'] = ticker
             data.append(stock_data[['Date', 'Ticker', 'Close']])
